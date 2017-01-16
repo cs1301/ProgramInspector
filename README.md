@@ -2,7 +2,7 @@
 
 A Python module to enable autograders to better assess student programs.
 
-#### Program(plaintext_code[, timeout=5, input_strings=None])
+### Program(plaintext_code[, timeout=5, input_strings=None])
 
 Creates a Program object for the given program. 
 
@@ -14,17 +14,17 @@ Creates a Program object for the given program.
 
 
 
-#### Program.call(function[, \*args, \*\*kwargs])
+### Program.call(function[, \*args, \*\*kwargs])
 
-#### Program.count_recursive_calls(function[, \*args, \*\*kwargs])
+### Program.count_recursive_calls(function[, \*args, \*\*kwargs])
 
-#### Program.count_for_loops([target])
+### Program.count_for_loops([target])
 
-#### Program.count_while_loops([target])
+### Program.count_while_loops([target])
 
-#### Program.count_list_comprehensions([target])
+### Program.count_list_comprehensions([target])
 
-#### Program.prep_input(input_strings)
+### Program.prep_input(input_strings)
 
 Stages input for Program.call. Each item in input_strings should be a string. Note that input items can also be staged in the Program constructor.
 
