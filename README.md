@@ -18,9 +18,30 @@ Ex:
 program = Program("print('hello')", timeout=10, input_strings=['input', 'items'])
 ```
 
+#### Program.globals
+A module containing the compiled program.
+
+#### Program.global_classes
+A dictionary of global classes in the program
+
+#### Program.global_functions
+A dictionary of global functions in the program
+
+#### Program.global_variables
+A dictionary of global variables in the program
+ 
+#### Program.input
+Input stream for Program.call
+ 
+#### Program.output
+Output stream for Program.call
+ 
+#### Program.plaintext_code
+The program in plaintext as it was instantiated
+
 ## Program.call(function[, \*args, \*\*kwargs])
 
-Calls a function using staged input and timing out to avoid infinite loops. All output will be redirected to Program.out.
+Calls a function using staged input and timing out to avoid infinite loops. All output will be redirected to Program.output.
 
 `function`: the function to call
 
@@ -38,7 +59,7 @@ def test_function():
 
 program = Program(program_string)
 program.call(program.globals.test_function)
-print(program.out.getvalue())
+print(program.output.getvalue())
 ```
 Output:
 ```
@@ -90,34 +111,10 @@ def test_function():
 program = Program(program_string)
 program.prep_input(["hi"])
 program.call(program.globals.test_function)
-print(program.out.getvalue())
+print(program.output.getvalue())
 ```
 
 output:
 ```
 hi
 ```
-
-#### Program.globals
-A module containing the compiled program.
-
-#### Program.global_classes
-A dictionary of global classes in the program
-
-#### Program.global_functions
-A dictionary of global functions in the program
-
-#### Program.global_variables
-A dictionary of global variables in the program
- 
-#### Program.input
-Input stream for Program.call
- 
-#### Program.output
-Output stream for Program.call
- 
-#### Program.plaintext_code
-The program in plaintext as it was instantiated
-
- 
-
