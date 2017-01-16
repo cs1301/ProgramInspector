@@ -2,7 +2,7 @@
 
 A Python module to enable autograders to better assess student programs.
 
-#### Program(plaintext_code[, timeout=5, input_strings=None])
+### Program(plaintext_code[, timeout=5, input_strings=None])
 
 Creates a Program object for the given program. 
 
@@ -12,7 +12,7 @@ Creates a Program object for the given program.
 
 `input_strings`: values to be entered as input (do not include newlines)
 
-#### Program.call(function[, \*args, \*\*kwargs])
+### Program.call(function[, \*args, \*\*kwargs])
 
 Calls a function using staged input and timing out to avoid infinite loops. All output will be redirected to Program.out.
 
@@ -22,19 +22,19 @@ Calls a function using staged input and timing out to avoid infinite loops. All 
 
 `**kwargs`: (optional) keyword arguments for function call
 
-#### Program.count_for_loops([target])
+### Program.count_for_loops([target])
 
 Returns the number of for loops in the program. 
 
 `target`: (optional) a function or a class may be passed in to analyze a specific region of code
 
-#### Program.count_list_comprehensions([target])
+### Program.count_list_comprehensions([target])
 
 Returns the number of list comprehensions in the program. 
 
 `target`: (optional) a function or a class may be passed in to analyze a specific region of code
 
-#### Program.count_recursive_calls(function[, \*args, \*\*kwargs])
+### Program.count_recursive_calls(function[, \*args, \*\*kwargs])
 
 Runs the given function with the given args and/or keywords as arguments and returns the number of recursive calls made. Note that this number does not include the initial call. 
 
@@ -44,13 +44,13 @@ Runs the given function with the given args and/or keywords as arguments and ret
 
 `**kwargs`: (optional) keyword arguments for function call
 
-#### Program.count_while_loops([target])
+### Program.count_while_loops([target])
 
 Returns the number of while loops in the program. 
 
 `target`: (optional) a function or a class may be passed in to analyze a specific region of code
 
-#### Program.prep_input(input_strings)
+### Program.prep_input(input_strings)
 
 Stages input for Program.call. Note that input items can also be staged in the Program constructor.
 
