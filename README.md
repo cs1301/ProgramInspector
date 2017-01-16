@@ -15,7 +15,7 @@ Creates a Program object for the given program.
 Ex:
 
 ```
-program = Program("print('hello')", timeout=10, ['input', 'items'])
+program = Program("print('hello')", timeout=10, input_strings=['input', 'items'])
 ```
 
 ### Program.call(function[, \*args, \*\*kwargs])
