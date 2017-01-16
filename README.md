@@ -98,3 +98,26 @@ output:
 hi
 ```
 
+#### Program.globals
+A module containing the compiled program.
+
+#### Program.global_classes
+A dictionary of global classes in the program
+
+#### Program.global_functions
+A dictionary of global functions in the program
+
+#### Program.global_variables
+A dictionary of global variables in the program
+ 
+#### Program.input
+Input stream for Program.call
+ 
+#### Program.output
+Output stream for Program.call
+ 
+#### Program.plaintext_code
+The program in plaintext as it was instantiated
+
+ 
+
