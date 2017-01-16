@@ -82,7 +82,7 @@ Returns the number of list comprehensions in the program.
 
 Runs the given function with the given args and/or keywords as arguments and returns the number of recursive calls made. Note that this number does not include the initial call. 
 
-`function`: the function to analyse. Note that the function will be called
+`function`: the function to analyze. Note that the function will be called
 
 `*args`: (optional) positional arguments for function call
 
