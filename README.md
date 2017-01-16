@@ -12,6 +12,12 @@ Creates a Program object for the given program.
 
 `input_strings`: values to be entered as input (do not include newlines)
 
+Ex:
+
+```
+program = Program("print('hello')", timeout=10, ['input', 'items'])
+```
+
 ### Program.call(function[, \*args, \*\*kwargs])
 
 Calls a function using staged input and timing out to avoid infinite loops. All output will be redirected to Program.out.
@@ -21,6 +27,23 @@ Calls a function using staged input and timing out to avoid infinite loops. All 
 `*args`: (optional) positional arguments for function call
 
 `**kwargs`: (optional) keyword arguments for function call
+
+Ex:
+
+```
+program_string = """
+def test_function():
+    print("Taylor Swift")
+"""
+
+program = Program(program_string)
+program.call(program.globals.test_function)
+print(program.out.getvalue())
+```
+Output:
+```
+Taylor Swift
+```
 
 ### Program.count_for_loops([target])
 
@@ -66,7 +89,7 @@ def test_function():
 
 program = Program(program_string)
 program.prep_input(["hi"])
-program.call(test_function)
+program.call(program.globals.test_function)
 print(program.out.getvalue())
 ```
 
