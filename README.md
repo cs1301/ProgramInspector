@@ -53,12 +53,12 @@ Ex:
 
 ```
 program_string = """
-def test_function():
-    print("Taylor Swift")
+def test_function(val):
+    print(val)
 """
 
 program = Program(program_string)
-program.call(program.globals.test_function)
+program.call(program.globals.test_function, "Taylor Swift")
 print(program.output.getvalue())
 ```
 Output:
@@ -68,15 +68,55 @@ Taylor Swift
 
 ## Program.count_for_loops([target])
 
-Returns the number of for loops in the program. 
+Returns the number of for loops in the program. Does not include list comprehensions. 
 
 `target`: (optional) a function or a class may be passed in to analyze a specific region of code
+
+Ex:
+```
+program_string = """
+def example():
+    for x in range(10):
+        print(x)
+
+    while x in [x for x in [1, 2, 3]]:
+        pass
+"""
+
+program = Program(program_string)
+program.count_for_loops(program.globals.example)
+print(program.output.getvalue())
+```
+Output:
+```
+1
+```
 
 ## Program.count_list_comprehensions([target])
 
 Returns the number of list comprehensions in the program. 
 
 `target`: (optional) a function or a class may be passed in to analyze a specific region of code
+
+Ex:
+```
+program_string = """
+def example():
+    for x in range(10):
+        print(x)
+
+    while x in [x for x in [1, 2, 3]]:
+        pass
+"""
+
+program = Program(program_string)
+program.count_list_comprehensions(program.globals.example)
+print(program.output.getvalue())
+```
+Output:
+```
+1
+```
 
 ## Program.count_recursive_calls(function[, \*args, \*\*kwargs])
 
@@ -88,11 +128,49 @@ Runs the given function with the given args and/or keywords as arguments and ret
 
 `**kwargs`: (optional) keyword arguments for function call
 
+Ex:
+```
+program_string = """
+def example(val):
+    if val > 0:
+        example(val - a)
+"""
+
+program = Program(program_string)
+program.count_recursive_calls(program.globals.example, 5)
+print(program.output.getvalue())
+```
+
+Output:
+```
+5
+```
+
 ## Program.count_while_loops([target])
 
 Returns the number of while loops in the program. 
 
 `target`: (optional) a function or a class may be passed in to analyze a specific region of code
+
+Ex:
+```
+program_string = """
+def example():
+    for x in range(10):
+        print(x)
+
+    while x in [x for x in [1, 2, 3]]:
+        pass
+"""
+
+program = Program(program_string)
+program.count_while_loops(program.globals.example)
+print(program.output.getvalue())
+```
+Output:
+```
+1
+```
 
 ## Program.prep_input(input_strings)
 
