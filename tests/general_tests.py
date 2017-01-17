@@ -21,10 +21,10 @@ def globals_tests():
 
 
 def output_test():
-    assert _test_file.out.getvalue() == "hello\nexpected output\n"
+    assert _test_file.output.getvalue() == "hello\nexpected output\n"
     _test_file.call(_test_file.globals.global_print_value, "hi")
     _test_file.call(_test_file.globals.global_print_value, "hey")
-    assert _test_file.out.getvalue() == "hello\nexpected output\nhi\nhey\n"
+    assert _test_file.output.getvalue() == "hello\nexpected output\nhi\nhey\n"
 
 
 def input_tests():

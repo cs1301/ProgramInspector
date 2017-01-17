@@ -13,7 +13,7 @@ class Program:
     def __init__(self, plaintext_code, timeout=5, input_strings=None):
         self.TIMEOUT = timeout
 
-        self.out = io.StringIO()
+        self.output = io.StringIO()
         self.input = None
         self.prep_input(input_strings or [])
 
@@ -21,8 +21,8 @@ class Program:
         old_stderr = sys.stderr
         old_in = sys.stdin
 
-        sys.stdout = self.out
-        sys.stderr = self.out
+        sys.stdout = self.output
+        sys.stderr = self.output
         sys.stdin = self.input
 
         self.plaintext_code = plaintext_code
@@ -178,8 +178,8 @@ class Program:
         old_stderr = sys.stderr
         old_in = sys.stdin
 
-        sys.stdout = self.out
-        sys.stderr = self.out
+        sys.stdout = self.output
+        sys.stderr = self.output
         sys.stdin = self.input
 
         def handler(signum, frame):
