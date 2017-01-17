@@ -10,7 +10,7 @@ for test_file_name in tests:
     for test_case in [x for x in dir(eval(test_file_name)) if x.endswith("_tests") or x.endswith("_test")]:
         try:
             eval("{}.{}()".format(test_file_name, test_case))
-            print("\033[92m\t{}: OK\033[0m".format(test_case))
+            print("\033[92m\tOK: {}\033[0m".format(test_case))
         except Exception as err:
-            print("\033[91m\t{}: ERROR\033[0m".format(test_case))
-            print("\t\t" + traceback.format_exc().replace("\n", "\n\t\t"))
+            print("\033[91m\tERROR: {}\033[0m\n".format(test_case))
+            print("\t\t\t" + traceback.format_exc().replace("\n", "\n\t\t\t"))
