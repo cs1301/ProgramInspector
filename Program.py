@@ -6,6 +6,7 @@ import types
 import signal
 import io
 import sys
+import ast
 import inspect
 
 
@@ -52,10 +53,12 @@ class Program:
                 self.global_variables[variable] = self.globals.__dict__[variable]
 
         self.code_objects = self._collect_code()
+        self.ast = ast.parse(self.plaintext_code)
 
-    def count_while_loops(self, target=None):
+    def count_while_loops(self, target=None, ignore_optimized=False):
         """
         :param target: (optional) Specific target to search.
+        :param ignore_optimized: Will not count pointless while loops if enabled.
         :return: Number of while loops in search target.
 
         notes:
@@ -63,25 +66,21 @@ class Program:
         SETUP_LOOP does not occur in list comprehensions
         """
 
-        target_code = None if target is None else self._collect_code(target.__code__)
-        total_loops = self._count_op_occurrences(dis.opmap["SETUP_LOOP"], code=target_code)
-        total_for_loops = self.count_for_loops(target=target)
-        return total_loops - total_for_loops
+        if ignore_optimized:
+            target_code = None if target is None else self._collect_code(target.__code__)
+            total_loops = self._count_op_occurrences(dis.opmap["SETUP_LOOP"], code=target_code)
+            total_for_loops = self.count_for_loops(target=target)
+            return total_loops - total_for_loops
+        else:
+            return self._count_ast_occurrences(ast.While, target=self._search_ast(target) if target else None)
 
     def count_for_loops(self, target=None):
         """
         :param target: (optional) Specific target to search.
         :return: Number of for loops in search target.
-
-        notes:
-        FOR_ITER used in compiler_for(...) and compiler_sync_comprehension_generator(...).
-        https://github.com/python/cpython/blob/0bdd9e516e8cb7f4a7d8198bf36194c8328c0f2c/Python/compile.c
-        may not work for async for loop (whatever that is?)
         """
 
-        target_code = None if target is None else self._collect_code(target.__code__)
-        return self._count_op_occurrences(dis.opmap["FOR_ITER"], code=target_code) - self.count_list_comprehensions(
-            target=target)
+        return self._count_ast_occurrences(ast.For, target=self._search_ast(target) if target else None)
 
     def count_list_comprehensions(self, target=None):
         """
@@ -94,14 +93,7 @@ class Program:
         [100, const_index_2, 0]: LOAD_CONST '*<listcomp>'
         """
 
-        count = 0
-        target_code = self.code_objects if target is None else self._collect_code(target.__code__)
-        for bytecode in target_code:
-            indices = [i for i, const in enumerate(bytecode.co_consts) if "<listcomp>" in str(const)]
-            for index in indices:
-                count += bytecode.co_code.count(bytes([dis.opmap["LOAD_CONST"], index, 0]))
-        assert (count % 2 == 0)
-        return int(count / 2)
+        return self._count_ast_occurrences(ast.ListComp, target=self._search_ast(target) if target else None)
 
     def count_recursive_calls(self, function, *args, **kwargs):
         """
@@ -230,3 +222,31 @@ class Program:
             if isinstance(const, CodeType):
                 code_objects += self._collect_code(const)
         return code_objects
+
+    def _count_ast_occurrences(self, query, node=None, target=None):
+        node = node or self.ast if not target else ast.parse(target)
+        count = 0
+        if type(node) == query:
+            count += 1
+
+        if hasattr(node, "body"):
+            for child in node.body:
+                count += self._count_ast_occurrences(query, child)
+
+        if hasattr(node, "value"):
+            count += self._count_ast_occurrences(query, node.value)
+
+        return count
+
+    def _search_ast(self, query, node=None):
+        node = node or self.ast
+
+        if isinstance(node, ast.FunctionDef) or isinstance(node, ast.ClassDef):
+            if node.name == query.__code__.co_name and node.lineno == query.__code__.co_firstlineno:
+                return node
+
+        if hasattr(node, "body"):
+            for child in node.body:
+                result = self._search_ast(query, child)
+                if result is not None:
+                    return result
