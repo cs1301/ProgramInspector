@@ -82,6 +82,9 @@ class Program:
 
         return self._count_ast_occurrences(ast.For, target=self._search_ast(target) if target else None)
 
+    def count_conditionals(self, target=None):
+        return self._count_ast_occurrences(ast.If, target=self._search_ast(target) if target else None)
+
     def count_list_comprehensions(self, target=None):
         """
         :param target: (optional) Specific target to search.
@@ -226,6 +229,7 @@ class Program:
     def _count_ast_occurrences(self, query, node=None, target=None):
         node = node or self.ast if not target else ast.parse(target)
         count = 0
+
         if type(node) == query:
             count += 1
 
@@ -235,6 +239,13 @@ class Program:
 
         if hasattr(node, "value"):
             count += self._count_ast_occurrences(query, node.value)
+
+        if hasattr(node, "orelse"):
+            if len(node.orelse) > 0 and type(node.orelse[0]) != ast.If:  # else case
+                count += 1
+            else:
+                for child in node.orelse:
+                    count += self._count_ast_occurrences(query, child)
 
         return count
 
