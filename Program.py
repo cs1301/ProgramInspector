@@ -56,24 +56,79 @@ class Program:
         self.ast = ast.parse(self.plaintext_code)
         self.ast_visited = set()
 
-    def count_while_loops(self, target=None, ignore_optimized=False):
-        """
-        :param target: (optional) Specific target to search.
-        :param ignore_optimized: Will not count pointless while loops if enabled.
-        :return: Number of while loops in search target.
+    def _count_op_occurrences(self, opcode, code=None):
+        if code is None:
+            code = self.code_objects
 
-        notes:
-        SETUP_LOOP only occurs once per for loop and while loop
-        SETUP_LOOP does not occur in list comprehensions
+        count = 0
+        for bytecode in code:
+            for instruction in dis.get_instructions(bytecode):
+                if instruction.opcode == opcode:
+                    count += 1
+
+        return count
+
+    def _collect_code(self, code=None):
+        code_objects = []
+        if code is None:
+            code = self.compiled_code
+        code_objects.append(code)
+        for const in code.co_consts:
+            if isinstance(const, CodeType):
+                code_objects += self._collect_code(const)
+        return code_objects
+
+    def _count_ast_occurrences(self, query, root=None, target=None):
+        root = root or self.ast if not target else ast.parse(self._search_ast(target))
+        nodes = ast.walk(root)
+
+        count = 0
+        for node in nodes:
+            if isinstance(node, query):
+                count += 1
+
+        return count
+
+    def _search_ast(self, query, root=None):
+        root = root or self.ast
+        nodes = ast.walk(root)
+
+        for node in nodes:
+            if isinstance(node, ast.FunctionDef) or isinstance(node, ast.ClassDef):
+                if node.name == query.__code__.co_name and node.lineno == query.__code__.co_firstlineno:
+                    return node
+
+    def call(self, function, *args, **kwargs):
+        """
+        Calls a given function with proper handling of input, output and timeouts.
+
+        :param function: function ot call
+        :param args: positional arguments
+        :param kwargs: keyword arguments
+        :return: return value of function
         """
 
-        if ignore_optimized:
-            target_code = None if target is None else self._collect_code(target.__code__)
-            total_loops = self._count_op_occurrences(dis.opmap["SETUP_LOOP"], code=target_code)
-            total_for_loops = self.count_for_loops(target=target)
-            return total_loops - total_for_loops
-        else:
-            return self._count_ast_occurrences(ast.While, target=target)
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        old_in = sys.stdin
+
+        sys.stdout = self.output
+        sys.stderr = self.output
+        sys.stdin = self.input
+
+        def handler(signum, frame):
+            raise TimeoutError("Function timeout: {}s".format(self.TIMEOUT))
+
+        signal.signal(signal.SIGALRM, handler)
+        signal.alarm(self.TIMEOUT)
+
+        try:
+            return function(*args, **kwargs)
+        finally:
+            signal.alarm(0)
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+            sys.stdin = old_in
 
     def count_for_loops(self, target=None):
         """
@@ -83,11 +138,21 @@ class Program:
 
         return self._count_ast_occurrences(ast.For, target=target)
 
-    def count_if_statements(self, target=None):
-        return self._count_ast_occurrences(ast.If, target=target)
-
     def count_if_expressions(self, target=None):
+        """
+        :param target: (optional) Specific target to search.
+        :return: Number of if expressions in search target. (e.g. a = 1 if some_bool else 2)
+        """
+
         return self._count_ast_occurrences(ast.IfExp, target=target)
+
+    def count_if_statements(self, target=None):
+        """
+        :param target: (optional) Specific target to search.
+        :return: Number of if statements in search target.
+        """
+
+        return self._count_ast_occurrences(ast.If, target=target)
 
     def count_list_comprehensions(self, target=None):
         """
@@ -97,6 +162,20 @@ class Program:
         """
 
         return self._count_ast_occurrences(ast.ListComp, target=target)
+
+    def prep_input(self, input_strings):
+        """
+        Clears current input stream and preps input with given values.
+
+        :param input_strings: a list of string values to be handed to input()
+        :return: None
+        """
+
+        self.input = io.StringIO()
+        for input_item in input_strings:
+            self.input.write(str(input_item))
+            self.input.write("\n")
+        self.input.seek(0)
 
     def count_recursive_calls(self, function, *args, **kwargs):
         """
@@ -145,103 +224,21 @@ class Program:
             return -1
         return edited_globals["__count__"]
 
-    def prep_input(self, input_strings):
+    def count_while_loops(self, target=None, ignore_optimized=False):
         """
-        Clears current input stream and preps input with given values.
+        :param target: (optional) Specific target to search.
+        :param ignore_optimized: Will not count pointless while loops if enabled.
+        :return: Number of while loops in search target.
 
-        :param input_strings: a list of string values to be handed to input()
-        :return: None
-        """
-
-        self.input = io.StringIO()
-        for input_item in input_strings:
-            self.input.write(str(input_item))
-            self.input.write("\n")
-        self.input.seek(0)
-
-    def call(self, function, *args, **kwargs):
-        """
-        Calls a given function with proper handling of input, output and timeouts.
-
-        :param function: function ot call
-        :param args: positional arguments
-        :param kwargs: keyword arguments
-        :return: return value of function
+        notes:
+        SETUP_LOOP only occurs once per for loop and while loop
+        SETUP_LOOP does not occur in list comprehensions
         """
 
-        old_stdout = sys.stdout
-        old_stderr = sys.stderr
-        old_in = sys.stdin
-
-        sys.stdout = self.output
-        sys.stderr = self.output
-        sys.stdin = self.input
-
-        def handler(signum, frame):
-            raise TimeoutError("Function timeout: {}s".format(self.TIMEOUT))
-
-        signal.signal(signal.SIGALRM, handler)
-        signal.alarm(self.TIMEOUT)
-
-        try:
-            return function(*args, **kwargs)
-        finally:
-            signal.alarm(0)
-            sys.stdout = old_stdout
-            sys.stderr = old_stderr
-            sys.stdin = old_in
-
-    def _count_op_occurrences(self, opcode, code=None):
-        """
-        :param opcode: opcode to search for.
-        :param code: (optional) Target to search.
-        :return: number of occurrences of opcode in search target
-        """
-
-        if code is None:
-            code = self.code_objects
-
-        count = 0
-        for bytecode in code:
-            for instruction in dis.get_instructions(bytecode):
-                if instruction.opcode == opcode:
-                    count += 1
-
-        return count
-
-    def _collect_code(self, code=None):
-        """
-        Utility function for optimizing code access.
-
-        :param code: parent code object
-        :return: all child code objects of code
-        """
-
-        code_objects = []
-        if code is None:
-            code = self.compiled_code
-        code_objects.append(code)
-        for const in code.co_consts:
-            if isinstance(const, CodeType):
-                code_objects += self._collect_code(const)
-        return code_objects
-
-    def _count_ast_occurrences(self, query, root=None, target=None):
-        root = root or self.ast if not target else ast.parse(self._search_ast(target))
-        nodes = ast.walk(root)
-
-        count = 0
-        for node in nodes:
-            if isinstance(node, query):
-                count += 1
-
-        return count
-
-    def _search_ast(self, query, root=None):
-        root = root or self.ast
-        nodes = ast.walk(root)
-
-        for node in nodes:
-            if isinstance(node, ast.FunctionDef) or isinstance(node, ast.ClassDef):
-                if node.name == query.__code__.co_name and node.lineno == query.__code__.co_firstlineno:
-                    return node
+        if ignore_optimized:
+            target_code = None if target is None else self._collect_code(target.__code__)
+            total_loops = self._count_op_occurrences(dis.opmap["SETUP_LOOP"], code=target_code)
+            total_for_loops = self.count_for_loops(target=target)
+            return total_loops - total_for_loops
+        else:
+            return self._count_ast_occurrences(ast.While, target=target)
