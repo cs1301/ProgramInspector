@@ -11,12 +11,20 @@ import inspect
 
 
 class Program:
-    def __init__(self, plaintext_code, timeout=5, input_strings=None):
+    def __init__(self, plaintext_code, timeout=5, input_strings=None, globals_dict=None):
         self.TIMEOUT = timeout
 
         self.output = io.StringIO()
         self.input = None
         self.prep_input(input_strings or [])
+
+        self.plaintext_code = plaintext_code
+        self.globals = imp.new_module("StudentCodeGlobals")
+        self.global_functions = {}
+        self.global_classes = {}
+        self.global_variables = {}
+        if globals_dict is not None:
+            self.set_globals(globals_dict)
 
         old_stdout = sys.stdout
         old_stderr = sys.stderr
@@ -26,8 +34,6 @@ class Program:
         sys.stderr = self.output
         sys.stdin = self.input
 
-        self.plaintext_code = plaintext_code
-        self.globals = imp.new_module("StudentCodeGlobals")
         try:
             exec(self.plaintext_code, self.globals.__dict__)
         finally:
@@ -35,9 +41,6 @@ class Program:
             sys.stderr = old_stderr
             sys.stdin = old_in
 
-        self.global_functions = {}
-        self.global_classes = {}
-        self.global_variables = {}
         self.compiled_code = compile(self.plaintext_code, "compiled_code", "exec")
         for const in self.compiled_code.co_consts:
             if isinstance(const, CodeType) and const.co_name in self.globals.__dict__.keys():
@@ -163,20 +166,6 @@ class Program:
 
         return self._count_ast_occurrences(ast.ListComp, target=target)
 
-    def prep_input(self, input_strings):
-        """
-        Clears current input stream and preps input with given values.
-
-        :param input_strings: a list of string values to be handed to input()
-        :return: None
-        """
-
-        self.input = io.StringIO()
-        for input_item in input_strings:
-            self.input.write(str(input_item))
-            self.input.write("\n")
-        self.input.seek(0)
-
     def count_recursive_calls(self, function, *args, **kwargs):
         """
         Runs a given function and determines the number of recursive calls made.
@@ -242,3 +231,27 @@ class Program:
             return total_loops - total_for_loops
         else:
             return self._count_ast_occurrences(ast.While, target=target)
+
+    def prep_input(self, input_strings):
+        """
+        Clears current input stream and preps input with given values.
+
+        :param input_strings: a list of string values to be handed to input()
+        :return: None
+        """
+
+        self.input = io.StringIO()
+        for input_item in input_strings:
+            self.input.write(str(input_item))
+            self.input.write("\n")
+        self.input.seek(0)
+
+    def set_globals(self, globals_dict):
+        for key, value in globals_dict.items():
+            self.globals.__dict__[key] = value
+            if inspect.isfunction(value):
+                self.global_functions[key] = value
+            elif inspect.isclass(value):
+                self.global_functions[key] = value
+            else:
+                self.global_variables[key] = value
