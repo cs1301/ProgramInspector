@@ -91,6 +91,69 @@ Output:
 ```
 1
 ```
+## Program.count_if_statements([target])
+
+Returns the number of if statementss in the program. Does not include if expressions. 
+
+`target`: (optional) a function or a class may be passed in to analyze a specific region of code
+
+Ex:
+```
+program_string = """
+def example(a):
+    if a == 5:
+        pass
+    elif a == 4:
+        pass
+    else:
+        pass
+        
+    if True:
+        pass
+        
+    a = 1 if True else 2
+"""
+
+program = Program(program_string)
+program.count_if_statements(program.globals.example)
+print(program.output.getvalue())
+```
+Output:
+```
+2
+```
+
+## Program.count_if_expressions([target])
+
+Returns the number of if expressions in the program. 
+
+`target`: (optional) a function or a class may be passed in to analyze a specific region of code
+
+Ex:
+```
+program_string = """
+def example(a):
+    if a == 5:
+        pass
+    elif a == 4:
+        pass
+    else:
+        pass
+        
+    if True:
+        pass
+        
+    a = 1 if True else 2
+"""
+
+program = Program(program_string)
+program.count_if_expressions(program.globals.example)
+print(program.output.getvalue())
+```
+Output:
+```
+1
+```
 
 ## Program.count_list_comprehensions([target])
 
