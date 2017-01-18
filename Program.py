@@ -12,6 +12,14 @@ import inspect
 
 class Program:
     def __init__(self, plaintext_code, timeout=5, input_strings=None, globals_dict=None):
+        """
+        :param plaintext_code: a string of the source code
+        :param timeout: number of seconds to run a function before assuming infinite loop
+        :param input_strings: a list of strings to write to stdin
+        :param globals_dict: string->object dictionary where string is the variable name and object is the value to set
+        :return:
+        """
+
         self.TIMEOUT = timeout
 
         self.output = io.StringIO()
@@ -247,6 +255,11 @@ class Program:
         self.input.seek(0)
 
     def set_globals(self, globals_dict):
+        """
+        :param globals_dict: string->object dictionary where string is the variable name and object is the value to set
+        :return: None
+        """
+
         for key, value in globals_dict.items():
             self.globals.__dict__[key] = value
             if inspect.isfunction(value):
