@@ -54,6 +54,7 @@ class Program:
 
         self.code_objects = self._collect_code()
         self.ast = ast.parse(self.plaintext_code)
+        self.ast_visited = set()
 
     def count_while_loops(self, target=None, ignore_optimized=False):
         """
@@ -72,7 +73,7 @@ class Program:
             total_for_loops = self.count_for_loops(target=target)
             return total_loops - total_for_loops
         else:
-            return self._count_ast_occurrences(ast.While, target=self._search_ast(target) if target else None)
+            return self._count_ast_occurrences(ast.While, target=target)
 
     def count_for_loops(self, target=None):
         """
@@ -80,23 +81,22 @@ class Program:
         :return: Number of for loops in search target.
         """
 
-        return self._count_ast_occurrences(ast.For, target=self._search_ast(target) if target else None)
+        return self._count_ast_occurrences(ast.For, target=target)
 
-    def count_conditionals(self, target=None):
-        return self._count_ast_occurrences(ast.If, target=self._search_ast(target) if target else None)
+    def count_if_statements(self, target=None):
+        return self._count_ast_occurrences(ast.If, target=target)
+
+    def count_if_expressions(self, target=None):
+        return self._count_ast_occurrences(ast.IfExp, target=target)
 
     def count_list_comprehensions(self, target=None):
         """
         :param target: (optional) Specific target to search.
         :return: Number of list comprehensions in search target.
 
-        notes:
-        A list comprehension looks like:
-        [100, const_index_1, 0]: LOAD_CONST '*<listcomp>*'
-        [100, const_index_2, 0]: LOAD_CONST '*<listcomp>'
         """
 
-        return self._count_ast_occurrences(ast.ListComp, target=self._search_ast(target) if target else None)
+        return self._count_ast_occurrences(ast.ListComp, target=target)
 
     def count_recursive_calls(self, function, *args, **kwargs):
         """
@@ -226,38 +226,22 @@ class Program:
                 code_objects += self._collect_code(const)
         return code_objects
 
-    def _count_ast_occurrences(self, query, node=None, target=None):
-        node = node or self.ast if not target else ast.parse(target)
+    def _count_ast_occurrences(self, query, root=None, target=None):
+        root = root or self.ast if not target else ast.parse(self._search_ast(target))
+        nodes = ast.walk(root)
+
         count = 0
-
-        if type(node) == query:
-            count += 1
-
-        if hasattr(node, "body"):
-            for child in node.body:
-                count += self._count_ast_occurrences(query, child)
-
-        if hasattr(node, "value"):
-            count += self._count_ast_occurrences(query, node.value)
-
-        if hasattr(node, "orelse"):
-            if len(node.orelse) > 0 and type(node.orelse[0]) != ast.If:  # else case
+        for node in nodes:
+            if isinstance(node, query):
                 count += 1
-            else:
-                for child in node.orelse:
-                    count += self._count_ast_occurrences(query, child)
 
         return count
 
-    def _search_ast(self, query, node=None):
-        node = node or self.ast
+    def _search_ast(self, query, root=None):
+        root = root or self.ast
+        nodes = ast.walk(root)
 
-        if isinstance(node, ast.FunctionDef) or isinstance(node, ast.ClassDef):
-            if node.name == query.__code__.co_name and node.lineno == query.__code__.co_firstlineno:
-                return node
-
-        if hasattr(node, "body"):
-            for child in node.body:
-                result = self._search_ast(query, child)
-                if result is not None:
-                    return result
+        for node in nodes:
+            if isinstance(node, ast.FunctionDef) or isinstance(node, ast.ClassDef):
+                if node.name == query.__code__.co_name and node.lineno == query.__code__.co_firstlineno:
+                    return node
