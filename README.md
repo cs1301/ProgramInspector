@@ -15,7 +15,8 @@ Creates a Program object for the given program.
 Ex:
 
 ```
-program = Program("print('hello')", timeout=10, input_strings=['input', 'items'])
+import ProgramInspector as PI
+program = PI.Program("print('hello')", timeout=10, input_strings=['input', 'items'])
 ```
 
 #### Program.globals
@@ -57,7 +58,8 @@ def test_function(val):
     print(val)
 """
 
-program = Program(program_string)
+import ProgramInspector as PI
+program = PI.Program(program_string)
 program.call(program.globals.test_function, "Taylor Swift")
 print(program.output.getvalue())
 ```
@@ -83,7 +85,8 @@ def example():
         pass
 """
 
-program = Program(program_string)
+import ProgramInspector as PI
+program = PI.Program(program_string)
 program.count_for_loops(program.globals.example)
 print(program.output.getvalue())
 ```
@@ -114,7 +117,8 @@ def example(a):
     a = 1 if True else 2
 """
 
-program = Program(program_string)
+import ProgramInspector as PI
+program = PI.Program(program_string)
 program.count_if_statements(program.globals.example)
 print(program.output.getvalue())
 ```
@@ -146,7 +150,8 @@ def example(a):
     a = 1 if True else 2
 """
 
-program = Program(program_string)
+import ProgramInspector as PI
+program = PI.Program(program_string)
 program.count_if_expressions(program.globals.example)
 print(program.output.getvalue())
 ```
@@ -172,7 +177,8 @@ def example():
         pass
 """
 
-program = Program(program_string)
+import ProgramInspector as PI
+program = PI.Program(program_string)
 program.count_list_comprehensions(program.globals.example)
 print(program.output.getvalue())
 ```
@@ -199,7 +205,8 @@ def example(val):
         example(val - a)
 """
 
-program = Program(program_string)
+import ProgramInspector as PI
+program = PI.Program(program_string)
 program.count_recursive_calls(program.globals.example, 5)
 print(program.output.getvalue())
 ```
@@ -226,7 +233,8 @@ def example():
         pass
 """
 
-program = Program(program_string)
+import ProgramInspector as PI
+program = PI.Program(program_string)
 program.count_while_loops(program.globals.example)
 print(program.output.getvalue())
 ```
@@ -249,7 +257,8 @@ def test_function():
     print(input())
 """
 
-program = Program(program_string)
+import ProgramInspector as PI
+program = PI.Program(program_string)
 program.prep_input(["hi"])
 program.call(program.globals.test_function)
 print(program.output.getvalue())
