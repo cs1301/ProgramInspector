@@ -42,9 +42,16 @@ class Program:
         sys.stderr = self.output
         sys.stdin = self.input
 
+        def handler(signum, frame):
+            raise TimeoutError("Function timeout: {}s".format(self.TIMEOUT))
+
+        signal.signal(signal.SIGALRM, handler)
+        signal.alarm(self.TIMEOUT)
+
         try:
             exec(self.plaintext_code, self.globals.__dict__)
         finally:
+            signal.alarm(0)
             sys.stdout = old_stdout
             sys.stderr = old_stderr
             sys.stdin = old_in

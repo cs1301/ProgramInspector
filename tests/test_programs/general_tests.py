@@ -1,6 +1,5 @@
 print(input())
 
-
 def global_func_1():
     print("test_func_1")
 
