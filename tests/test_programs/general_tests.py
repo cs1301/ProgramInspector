@@ -18,3 +18,9 @@ def global_print_value(value):
 
 def global_input_test():
     return input()
+
+
+class Phone:
+    def __init__(self):
+        self.space = 128
+        self.color = "red"

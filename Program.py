@@ -63,7 +63,7 @@ class Program:
                 if inspect.isfunction(global_object):
                     self.global_functions[global_object.__code__.co_name] = global_object
                 elif inspect.isclass(global_object):
-                    self.global_classes[global_object.__code__.co_name] = global_object
+                    self.global_classes[global_object.__name__] = global_object
         for variable in self.compiled_code.co_names:
             if variable not in self.global_functions.keys() \
                     and variable not in self.global_classes.keys() \
